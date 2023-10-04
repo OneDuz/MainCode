@@ -62,9 +62,7 @@ local antiaim = {
     yaw = { ui_reference("AA", "Anti-aimbot angles", "Yaw") },
     yaw_jitter = { ui_reference("AA", "Anti-aimbot angles", "Yaw jitter") } ,
     body_yaw = { ui_reference("AA", "Anti-aimbot angles", "Body yaw") },
-    freestanding_body_yaw = ui_reference("AA", "Anti-aimbot angles", "Freestanding body yaw"),
     edge_yaw = ui_reference("AA", "Anti-aimbot angles", "Edge yaw"),
-    freestanding = { ui_reference("AA", "Anti-aimbot angles", "Freestanding") },
     roll =  ui_reference("AA", "Anti-aimbot angles", "Roll") ,
 
     slow_motion = { ui_reference("AA", "Other", "Slow motion") },
@@ -229,7 +227,7 @@ gui.menu = {
     manualarrow_size = main:ui(ui_new_combobox(gui.tab[1],gui.tab[2],"[-] Arrow mode",{"+","-"}),true),
     manualarrow_back = main:ui(ui_new_checkbox(gui.tab[1],gui.tab[2],"Background shadow"),true),
     manualarrow_distance = main:ui(ui_new_slider(gui.tab[1],gui.tab[2],"Arrow distance",0,100,15,true,"*"),true),
-    antiaim_settings = main:ui(ui_new_multiselect(gui.tab[1],gui.tab[2],"\aC08A8AFF[~]\aFFFFFFC8 Extra settings","\a646464FF Manual antiaim","\a646464FF Antiaim on use","\a646464FF Edge yaw","\a646464FF Freestanding","\a646464FF Roll"),true),
+    antiaim_settings = main:ui(ui_new_multiselect(gui.tab[1],gui.tab[2],"\aC08A8AFF[~]\aFFFFFFC8 Extra settings","\a646464FF Manual antiaim","\a646464FF Antiaim on use","\a646464FF Edge yaw","\a646464FF Roll"),true),
     forceroll_states = main:ui(ui_new_multiselect(gui.tab[1],gui.tab[2],"[-] Roll states","\a646464FF Stand","\a646464FF Move","\a646464FF Slow walk","\a646464FF Duck","\a646464FF Air","\a646464FF Use","\a646464FF Manual"),true),
     roll_key = main:ui(ui_new_hotkey(gui.tab[1],gui.tab[2],"[-] Roll states",0),false),
     roll_selects = main:ui(ui_new_multiselect(gui.tab[1],gui.tab[2],"[-] Extra roll options",{"\aF8F884D1 Match making","\aF8F884D1 Jitter","\aF8F884D1 Disable roll when peeking","\aFA3F3FFF Unsafe roll"})),
@@ -241,7 +239,6 @@ gui.menu = {
     manual_right = main:ui(ui_new_hotkey(gui.tab[1],gui.tab[2],"Manual right"),false),
     manual_reset = main:ui(ui_new_hotkey(gui.tab[1],gui.tab[2],"Reset"),false),
     edge_yaw_key = main:ui(ui_new_hotkey(gui.tab[1],gui.tab[2],"Edge yaw"),false),
-    freestanding_key = main:ui(ui_new_hotkey(gui.tab[1],gui.tab[2],"Freestanding"),false),
     misc_settings = main:ui(ui_new_multiselect(gui.tab[1],gui.tab[2],"\aC08A8AFF[~]\aFFFFFFC8 Misc settings","\a646464FF Anti knife","\a646464FF Animation breaker","\a646464FF Trash talk","\a646464FF Clantag"),true),
     pitch0_onknife = main:ui(ui_new_checkbox(gui.tab[1],gui.tab[2],"Reset pitch on knife"),true),
     knife_distance = main:ui(ui_new_slider(gui.tab[1],gui.tab[2],"Anti knife radius",0,1000,280,true,"u"),true),
@@ -288,7 +285,6 @@ for k, v in pairs(_state) do
         step_abs = main:ui(ui_new_checkbox(gui.tab[3],gui.tab[4],__state[k].." Increment absolute value"),true),
         step_fake_min = main:ui(ui_new_slider(gui.tab[3],gui.tab[4],__state[k].." Fake yaw limit - \aC08A8AFFmin",0,60,58,true,"°"),true),
         step_fake_max = main:ui(ui_new_slider(gui.tab[3],gui.tab[4],__state[k].." Fake yaw limit - \aC08A8AFFmax",0,60,58,true,"°"),true),
-        freestanding_bodyyaw = main:ui(ui_new_checkbox(gui.tab[3],gui.tab[4],__state[k].." Freestanding bodyyaw"),true)
     }
 end
 
@@ -302,7 +298,6 @@ g_antiaim.save_antiaims = {
     body_yaw_1 = "Off",
     body_yaw_2 = 0,
     fake_yaw_limit = 0,
-    freestanding_body_yaw = false
 }
 
 function g_antiaim:og_menu(state)
@@ -314,10 +309,7 @@ function g_antiaim:og_menu(state)
     ui_set_visible(antiaim.yaw_jitter[2], state)
     ui_set_visible(antiaim.body_yaw[1], state)
     ui_set_visible(antiaim.body_yaw[2], state)
-    ui_set_visible(antiaim.freestanding_body_yaw, state)
     ui_set_visible(antiaim.edge_yaw, state)
-    ui_set_visible(antiaim.freestanding[1], state)
-    ui_set_visible(antiaim.freestanding[2], state)
     ui_set_visible(antiaim.roll, state)
 end
 
@@ -512,7 +504,6 @@ function g_antiaim:run_custom(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     elseif self.c_var.c == 2 and funcs.ui:table_contains(ui_get(m[2].extra_options),"Suppress jitter when choking commands") == true and not (ui.get(antiaim.doubletap[1]) and ui.get(antiaim.doubletap[2])) and not (ui_get(antiaim.hide_shots[1]) and  ui_get(antiaim.hide_shots[2])) then
         self.save_antiaims.yaw_2 = 0
         self.save_antiaims.yaw_jitter_1 = "Off"
@@ -520,7 +511,6 @@ function g_antiaim:run_custom(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     elseif self.c_var.c == 3 and funcs.ui:table_contains(ui_get(m[3].extra_options),"Suppress jitter when choking commands") == true and not (ui.get(antiaim.doubletap[1]) and ui.get(antiaim.doubletap[2])) and not (ui_get(antiaim.hide_shots[1]) and  ui_get(antiaim.hide_shots[2])) then
         self.save_antiaims.yaw_2 = 24 
         self.save_antiaims.yaw_jitter_1 = "Off"
@@ -528,7 +518,6 @@ function g_antiaim:run_custom(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     elseif self.c_var.c == 4 and funcs.ui:table_contains(ui_get(m[4].extra_options),"Suppress jitter when choking commands") == true and not (ui.get(antiaim.doubletap[1]) and ui.get(antiaim.doubletap[2])) and not (ui_get(antiaim.hide_shots[1]) and  ui_get(antiaim.hide_shots[2])) then
         self.save_antiaims.yaw_2 = 35 
         self.save_antiaims.yaw_jitter_1 = "Off"
@@ -536,7 +525,6 @@ function g_antiaim:run_custom(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     elseif self.c_var.c == 5 and funcs.ui:table_contains(ui_get(m[5].extra_options),"Suppress jitter when choking commands") == true and not (ui.get(antiaim.doubletap[1]) and ui.get(antiaim.doubletap[2])) and not (ui_get(antiaim.hide_shots[1]) and  ui_get(antiaim.hide_shots[2])) then
         self.save_antiaims.yaw_2 = 15
         self.save_antiaims.yaw_jitter_1 = "Off"
@@ -544,7 +532,6 @@ function g_antiaim:run_custom(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     elseif self.c_var.c == 6 and funcs.ui:table_contains(ui_get(m[6].extra_options),"Suppress jitter when choking commands") == true and not (ui.get(antiaim.doubletap[1]) and ui.get(antiaim.doubletap[2])) and not (ui_get(antiaim.hide_shots[1]) and  ui_get(antiaim.hide_shots[2])) then
         self.save_antiaims.yaw_2 = 15
         self.save_antiaims.yaw_jitter_1 = "Off"
@@ -552,7 +539,6 @@ function g_antiaim:run_custom(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     else
         
     
@@ -624,7 +610,6 @@ function g_antiaim:run_custom(cmd)
         elseif ui_get(m[self.c_var.c].bodyyaw_mode) == "Recursion" then
             self.save_antiaims.body_yaw_2 = self:clamp(self.c_var.bodystep_return_value,self.c_var.bodystep_min,self.c_var.bodystep_max)
         end
-        self.save_antiaims.freestanding_body_yaw = ui_get(m[self.c_var.c].freestanding_bodyyaw)
     end
 
     self:og_menu(false)
@@ -699,7 +684,6 @@ function g_antiaim:run_presets_1(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     elseif states == 1 then
         self.save_antiaims.yaw_2 = self.jitter:desync(18,28)
         self.save_antiaims.yaw_jitter_1 = "Center"
@@ -729,7 +713,6 @@ function g_antiaim:run_presets_1(cmd)
             end
         end
         self.save_antiaims.fake_yaw_limit = self:clamp(presets_vars.st_return_values_desync,presets_vars.st_min_desync,presets_vars.st_max_desync)
-        self.save_antiaims.freestanding_body_yaw = false
     end
 
     if states == 2 and funcs.ui:table_contains(ui_get(gui.menu.preset_static),"\a646464FF Move") == true and not (ui.get(antiaim.doubletap[1]) and ui.get(antiaim.doubletap[2])) and not (ui_get(antiaim.hide_shots[1]) and  ui_get(antiaim.hide_shots[2])) then
@@ -739,7 +722,6 @@ function g_antiaim:run_presets_1(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     elseif states == 2 then
         self.save_antiaims.yaw_2 = self.jitter:desync(10,-5)
         self.save_antiaims.yaw_jitter_1 = "Center"
@@ -758,7 +740,6 @@ function g_antiaim:run_presets_1(cmd)
             end
         end
         self.save_antiaims.fake_yaw_limit = self:clamp(presets_vars.m_return_values_desync,presets_vars.m_min_desync,presets_vars.m_max_desync)
-        self.save_antiaims.freestanding_body_yaw = false
     end
 
 
@@ -770,7 +751,6 @@ function g_antiaim:run_presets_1(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     elseif states == 3 then 
         self.save_antiaims.yaw_2 = self.jitter:desync(35,-10)
         self.save_antiaims.yaw_jitter_1 = "Center"
@@ -789,7 +769,6 @@ function g_antiaim:run_presets_1(cmd)
             end
         end
         self.save_antiaims.fake_yaw_limit = self:clamp(presets_vars.m_return_values_desync,presets_vars.m_min_desync,presets_vars.m_max_desync)
-        self.save_antiaims.freestanding_body_yaw = false
     end
 
 
@@ -800,7 +779,6 @@ function g_antiaim:run_presets_1(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     elseif states == 4 then 
         self.save_antiaims.yaw_2 = self.jitter:desync(30,10)
         self.save_antiaims.yaw_jitter_1 = "Center"
@@ -830,7 +808,6 @@ function g_antiaim:run_presets_1(cmd)
             end
         end
         self.save_antiaims.fake_yaw_limit = self:clamp(presets_vars.m_return_values_desync,presets_vars.m_min_desync,presets_vars.m_max_desync)
-        self.save_antiaims.freestanding_body_yaw = false
     end
 
 
@@ -841,7 +818,6 @@ function g_antiaim:run_presets_1(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     elseif states == 5 then
         self.save_antiaims.yaw_2 = self.jitter:desync(20,6)
         self.save_antiaims.yaw_jitter_1 = "Center"
@@ -860,7 +836,6 @@ function g_antiaim:run_presets_1(cmd)
             end
         end
         self.save_antiaims.fake_yaw_limit = self:clamp(presets_vars.m_return_values_desync,presets_vars.m_min_desync,presets_vars.m_max_desync)
-        self.save_antiaims.freestanding_body_yaw = false
     end
 
 
@@ -882,17 +857,9 @@ function g_antiaim.direction:run_direction()
     ui_set(gui.menu.manual_left,"On hotkey")
     ui_set(gui.menu.manual_right,"On hotkey")
     ui_set(gui.menu.manual_reset,"On hotkey")
-    ui_set(antiaim.freestanding[2],"Always on")
     local statements = ui.get(gui.menu.antiaim_settings)
 
-    local fs_e = ui_get(gui.menu.freestanding_key) and funcs.ui:table_contains(statements,"\a646464FF Freestanding")
 	local edge_e = ui_get(gui.menu.edge_yaw_key) and funcs.ui:table_contains(statements,"\a646464FF Edge yaw")
-    ui_set(antiaim.freestanding[1], fs_e and "Default" or "-")
-    ui_set(antiaim.edge_yaw, edge_e)
-    if funcs.ui:table_contains(statements,"\a646464FF Manual antiaim") and client.key_state( 0x45 ) then
-        ui_set(antiaim.freestanding[1], "-")
-        ui_set(antiaim.edge_yaw, false)
-   end
 
     m_state = ui.get(gui.menu.temp_manual)
 
@@ -1099,7 +1066,6 @@ function g_antiaim:run_roll(cmd)
 
 
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     end
 
     if self.direction.c_var.saved_dir ~= 0 and states == 6 then
@@ -1108,7 +1074,6 @@ function g_antiaim:run_roll(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = -180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     end
 
     if states == 5 then
@@ -1118,7 +1083,6 @@ function g_antiaim:run_roll(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     end
 
     if states == 4 then
@@ -1128,7 +1092,6 @@ function g_antiaim:run_roll(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     end
 
     if states == 3 then
@@ -1138,7 +1101,6 @@ function g_antiaim:run_roll(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     end
 
     if states == 2 then
@@ -1148,7 +1110,6 @@ function g_antiaim:run_roll(cmd)
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
         self.save_antiaims.fake_yaw_limit = 60
-        self.save_antiaims.freestanding_body_yaw = false
     end
 
     if states == 1 then
@@ -1160,7 +1121,7 @@ function g_antiaim:run_roll(cmd)
                 self.save_antiaims.body_yaw_1 = "Static"
                 self.save_antiaims.body_yaw_2 = -180
                 self.save_antiaims.fake_yaw_limit = 60
-                self.save_antiaims.freestanding_body_yaw = false
+    
             else
                 self.save_antiaims.yaw_2 = 10
                 self.save_antiaims.yaw_jitter_1 = "Off"
@@ -1168,7 +1129,7 @@ function g_antiaim:run_roll(cmd)
                 self.save_antiaims.body_yaw_1 = "Static"
                 self.save_antiaims.body_yaw_2 = 180
                 self.save_antiaims.fake_yaw_limit = 60
-                self.save_antiaims.freestanding_body_yaw = false
+    
             end
 
             
@@ -1186,7 +1147,7 @@ function g_antiaim:run_roll(cmd)
 
 
             self.save_antiaims.fake_yaw_limit = 60
-            self.save_antiaims.freestanding_body_yaw = false
+
         end
 
     end
@@ -1290,7 +1251,6 @@ function g_antiaim:run_knife()
         self.save_antiaims.yaw_jitter_1 = "Off"
         self.save_antiaims.body_yaw_1 = "Static"
         self.save_antiaims.body_yaw_2 = 180
-        self.save_antiaims.freestanding_body_yaw = false
         self.save_antiaims.fake_yaw_limit = 60
  
 end
@@ -1422,8 +1382,6 @@ function g_antiaim:run_main(cmd)
                 self.save_antiaims.body_yaw_1 = "Static"
                 self.save_antiaims.body_yaw_2 = 180
                 self.save_antiaims.yaw_jitter_1 = "Off"
-                self.save_antiaims.freestanding_body_yaw = true
-    
             end
         end
     end
@@ -1473,7 +1431,6 @@ function g_antiaim:run_main(cmd)
         ui_set(antiaim.yaw_jitter[2],self.save_antiaims.yaw_jitter_2)
         ui_set(antiaim.body_yaw[1],self.save_antiaims.body_yaw_1)
         ui_set(antiaim.body_yaw[2],self.save_antiaims.body_yaw_2)
-        ui_set(antiaim.freestanding_body_yaw,self.save_antiaims.freestanding_body_yaw)
 
     
 
@@ -2630,7 +2587,6 @@ function main:init_gui()
    ui_set_visible(m.prevent_jitter,enable and funcs.ui:table_contains(ui_get(m.antiaim_settings),"\a646464FF Manual antiaim") == true and antiaim_settings)
 
    ui_set_visible(m.edge_yaw_key,enable and funcs.ui:table_contains(ui_get(m.antiaim_settings),"\a646464FF Edge yaw") == true and antiaim_settings) 
-   ui_set_visible(m.freestanding_key,enable and funcs.ui:table_contains(ui_get(m.antiaim_settings),"\a646464FF Freestanding") == true and antiaim_settings )
     local misc_d = funcs.ui:table_contains(ui_get(m.main_list),"\a"..menu4.."                   Misc features") == true
    ui_set_visible(m.pitch0_onknife,enable and funcs.ui:table_contains(ui_get(m.misc_settings),"\a646464FF Anti knife") == true and misc_d)
    ui_set_visible(m.knife_distance,enable and funcs.ui:table_contains(ui_get(m.misc_settings),"\a646464FF Anti knife") == true and misc_d)
@@ -2678,7 +2634,6 @@ function main:init_gui()
         ui_set_visible(m.custom[i].step_abs,show and ui_get(m.custom[i].fake_yaw_mode) == "Progressively increase" and ui_get(m.custom[i].self_bodyyaw_mode) ~= "Off" and ui_get(m.custom[i].fake_yaw_mode) ~= "Static")
         ui_set_visible(m.custom[i].step_fake_min,show  and ui_get(m.custom[i].fake_yaw_mode) == "Progressively increase" and ui_get(m.custom[i].self_bodyyaw_mode) ~= "Off" and ui_get(m.custom[i].fake_yaw_mode) ~= "Static" )
         ui_set_visible(m.custom[i].step_fake_max,show  and ui_get(m.custom[i].fake_yaw_mode) == "Progressively increase" and ui_get(m.custom[i].self_bodyyaw_mode) ~= "Off" and ui_get(m.custom[i].fake_yaw_mode) ~= "Static" )
-        ui_set_visible(m.custom[i].freestanding_bodyyaw,show and ui_get(m.custom[i].self_bodyyaw_mode) ~= "Off")
     end
 
     main:callback("shutdown",main.shutdown,enable)
